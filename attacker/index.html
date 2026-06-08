@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Attaquant - Padding Oracle Attack</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>8INF874 - Padding Oracle Attack</h2>
+<p>
+  Machine : <b>Attaquant</b> (localhost:8081) |
+  Oracle cible : <b>localhost:5001/paddingOracle</b> |
+  Serveur : <a href="http://localhost:8080" target="_blank">localhost:8080</a>
+</p>
+
+<hr>
+
+<h3>Machine attaquante -- Attaque Padding Oracle</h3>
+
+<p>
+  L'attaquant a intercepte un ciphertext AES-CBC. Il ne connait pas la cle.<br>
+  Il interroge l'oracle de padding du serveur (HTTP 200 / 403) pour retrouver le clair.<br>
+  Formules :<br>
+  &nbsp;&nbsp;<code>interm[j] = b XOR targetPad</code> &nbsp;(quand oracle repond 200)<br>
+  &nbsp;&nbsp;<code>P[j] = interm[j] XOR C[i-1][j]</code> &nbsp;(clair retrouve)
+</p>
+
+<hr>
+
+<div id="bannerCt" style="display:none;">
+  <p><b>Ciphertext intercepte (depuis l'URL) :</b></p>
+  <pre id="ctDisplay"></pre>
+</div>
+
+<p>
+  Ciphertext cible (hex, IV inclus) :<br>
+  <input type="text" id="ctInput" placeholder="intercepte automatiquement ou coller ici">
+</p>
+
+<p>
+  <button id="btnLancer" onclick="lancerAttaque()">Lancer l'attaque</button>
+  <button id="btnStop" style="display:none;" onclick="arreter()">Arreter</button>
+</p>
+
+<div id="zoneAttaque" style="display:none;">
+
+  <h4>Progression</h4>
+  <table style="width:auto;">
+    <tr><td>Bloc</td><td id="sBloc">-</td></tr>
+    <tr><td>Octet</td><td id="sOctet">-</td></tr>
+    <tr><td>b teste</td><td id="sB">-</td></tr>
+    <tr><td>targetPad</td><td id="sPad">-</td></tr>
+    <tr><td>Requetes 403</td><td id="s403" class="fail">0</td></tr>
+    <tr><td>Requetes 200</td><td id="s200" class="ok">0</td></tr>
+    <tr><td>Total</td><td id="sTotal">0</td></tr>
+    <tr><td>Progression</td><td id="sPct">0%</td></tr>
+  </table>
+
+  <h4>Clair recupere :</h4>
+  <pre id="recDisplay"></pre>
+
+  <hr>
+  <h4>Journal des requetes POST /paddingOracle</h4>
+
+  <table border="0" width="100%" cellpadding="0" cellspacing="10">
+    <tr valign="top">
+
+      <td width="50%">
+        <b class="fail">Requetes echouees -- HTTP 403 (padding invalide)</b><br>
+        <div style="height:280px; overflow-y:auto; margin-top:6px; border:1px solid #444;">
+          <table>
+            <thead>
+              <tr><th>req#</th><th>bloc</th><th>octet</th><th>b teste</th><th>targetPad</th><th>HTTP</th></tr>
+            </thead>
+            <tbody id="tbody403"></tbody>
+          </table>
+        </div>
+      </td>
+
+      <td width="50%">
+        <b class="ok">Requetes reussies -- HTTP 200 (octet trouve)</b><br>
+        <div style="height:280px; overflow-y:auto; margin-top:6px; border:1px solid #444;">
+          <table>
+            <thead>
+              <tr><th>req#</th><th>bloc</th><th>octet</th><th>b</th><th>targetPad</th><th>interm=b XOR pad</th><th>P[j]=interm XOR C_prev</th><th>char</th></tr>
+            </thead>
+            <tbody id="tbody200"></tbody>
+          </table>
+        </div>
+      </td>
+
+    </tr>
+  </table>
+
+</div>
+
+<div id="zoneResult" style="display:none;">
+  <hr>
+  <h3>Resultat</h3>
+  <table style="width:auto;">
+    <tr><td>Clair recupere par l'attaquant</td><td id="recMsg" class="ok"></td></tr>
+    <tr><td>Total requetes oracle</td><td id="rTotal">-</td></tr>
+    <tr><td>Dont 403</td><td id="r403" class="fail">-</td></tr>
+    <tr><td>Dont 200</td><td id="r200" class="ok">-</td></tr>
+    <tr><td>Cle AES connue</td><td class="fail">NON</td></tr>
+  </table>
+</div>
+
+<script src="attaque.js"></script>
+</body>
+</html>

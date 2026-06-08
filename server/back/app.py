@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 import crypto
 
 app = Flask(__name__)
@@ -35,24 +35,6 @@ def decrypt_cbc():
     try:
         data = bytes.fromhex(body.get("ciphertext") or "")
         pt = crypto.cbc_decrypt(data)
-        return jsonify({"plaintext": pt.decode("utf-8", errors="replace")})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-
-@app.route("/encryptCtr", methods=["POST"])
-def encrypt_ctr():
-    body = request.get_json(force=True)
-    msg = (body.get("message") or "").encode()
-    return jsonify({"ciphertext": crypto.ctr_encrypt(msg).hex()})
-
-
-@app.route("/decryptCtr", methods=["POST"])
-def decrypt_ctr():
-    body = request.get_json(force=True)
-    try:
-        data = bytes.fromhex(body.get("ciphertext") or "")
-        pt = crypto.ctr_decrypt(data)
         return jsonify({"plaintext": pt.decode("utf-8", errors="replace")})
     except Exception as e:
         return jsonify({"error": str(e)}), 400

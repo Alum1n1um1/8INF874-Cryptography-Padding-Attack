@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Serveur - Padding Oracle Attack</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>8INF874 - Padding Oracle Attack</h2>
+<p>
+  Machine : <b>Serveur vulnerable</b> (localhost:8080) |
+  API : <b>localhost:5001</b> |
+  Attaquant : <a href="http://localhost:8081" target="_blank">localhost:8081</a>
+</p>
+
+<hr>
+
+<h3>Le serveur chiffre les donnees en AES-128-CBC</h3>
+
+<p>
+  Chaque message est chiffre avec une cle aleatoire generee au demarrage du serveur.<br>
+  Le serveur renvoie <code>IV || C1 || C2 ...</code> en hex.<br>
+  Il expose aussi un endpoint <code>/paddingOracle</code> qui indique si le padding est valide.<br>
+  <b style="color:#f88;">C'est cet endpoint qui cree la vulnerabilite.</b>
+</p>
+
+<p>
+  Message a chiffrer :
+  <input type="text" id="msgInput" value="Hello, World!">
+  <button onclick="chiffrer()">Chiffrer</button>
+</p>
+
+<div id="resultat" style="display:none;">
+  <h4>Texte chiffre (hex) -- transmis sur le reseau :</h4>
+  <pre id="hexOut"></pre>
+
+  <h4>Blocs (16 octets chacun) :</h4>
+  <table>
+    <thead>
+      <tr><th>Bloc</th><th>Hex</th><th>Description</th></tr>
+    </thead>
+    <tbody id="blocksOut"></tbody>
+  </table>
+
+  <br>
+  <p style="color:#f88;">
+    Ce ciphertext transite sur le reseau.<br>
+    L'attaquant peut le capturer et l'utiliser pour retrouver le clair sans la cle.
+  </p>
+  <p>
+    <button onclick="envoyerALAttaquant()">Simuler l'interception -- envoyer a l'attaquant (port 8081) &rarr;</button>
+  </p>
+</div>
+
+<script src="interception.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+body { background: #111; color: #ddd; font-family: monospace; padding: 20px; }
+a { color: #aaa; }
+input { background: #222; color: #ddd; border: 1px solid #555; padding: 4px; font-family: monospace; width: 400px; }
+button { background: #222; color: #ddd; border: 1px solid #555; padding: 4px 10px; cursor: pointer; font-family: monospace; }
+table { border-collapse: collapse; font-size: 12px; }
+td, th { border: 1px solid #444; padding: 3px 6px; text-align: left; }
+th { background: #1a1a1a; }
+pre { background: #222; padding: 8px; word-break: break-all; white-space: pre-wrap; }
+hr { border-color: #333; }
+.ok   { color: #2d9; }
+.fail { color: #f66; }
+.dim  { color: #666; }
+.iv   { color: #ffcc22; }
+.ct   { color: #4488ff; }

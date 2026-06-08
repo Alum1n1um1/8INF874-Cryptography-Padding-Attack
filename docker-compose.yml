@@ -1,12 +1,23 @@
 services:
-  backend:
-    build: ./backend
+
+  # Serveur vulnerable : API AES-CBC + oracle de padding
+  server-back:
+    build: ./server/back
     ports:
       - "5001:5000"
 
-  frontend:
-    build: ./frontend
+  # Serveur vulnerable : interface web (machine Alice)
+  server-front:
+    build: ./server/front
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      - server-back
+
+  # Machine attaquante : interface de l'attaque padding oracle
+  attacker:
+    build: ./attacker
+    ports:
+      - "8081:80"
+    depends_on:
+      - server-back
