@@ -1,6 +1,5 @@
 var API = 'http://localhost:5001';
 
-
 function hexToBytes(hex) {
     var b = new Uint8Array(hex.length >> 1);
     for (var i = 0; i < hex.length; i += 2)
@@ -9,7 +8,7 @@ function hexToBytes(hex) {
 }
 
 function bytesToHex(b) {
-    return Array.from(b, function(x) { return x.toString(16).padStart(2, '0'); }).join('');
+    return Array.from(b, function (x) { return x.toString(16).padStart(2, '0'); }).join('');
 }
 
 function h(n) { return '0x' + n.toString(16).padStart(2, '0'); }
@@ -83,7 +82,7 @@ async function oracle(modPrev, ctBlock, bi, bytePos, b, targetPad) {
     totalReq++;
     total403++;
     document.getElementById('sTotal').textContent = totalReq;
-    document.getElementById('s403').textContent   = total403;
+    document.getElementById('s403').textContent = total403;
 
     var payload = bytesToHex(new Uint8Array([...modPrev, ...ctBlock]));
     var r = await post('/paddingOracle', { ciphertext: payload });
@@ -101,12 +100,12 @@ async function oracle(modPrev, ctBlock, bi, bytePos, b, targetPad) {
 }
 
 function updateStats(bi, nBlocs, bytePos, totalBytes, b, targetPad) {
-    document.getElementById('sBloc').textContent  = bi + ' / ' + nBlocs;
+    document.getElementById('sBloc').textContent = bi + ' / ' + nBlocs;
     document.getElementById('sOctet').textContent = (16 - bytePos) + ' / 16';
-    document.getElementById('sB').textContent     = h(b);
-    document.getElementById('sPad').textContent   = h(targetPad);
+    document.getElementById('sB').textContent = h(b);
+    document.getElementById('sPad').textContent = h(targetPad);
     var done = (bi - 1) * 16 + (16 - bytePos);
-    document.getElementById('sPct').textContent   = Math.round(done / totalBytes * 100) + '%';
+    document.getElementById('sPct').textContent = Math.round(done / totalBytes * 100) + '%';
 }
 
 function updateDisplay(totalBytes) {
@@ -139,9 +138,9 @@ async function lancerAttaque() {
     document.getElementById('s200').textContent = '0';
     document.getElementById('sTotal').textContent = '0';
 
-    var allBytes   = hexToBytes(hex);
-    var nBlocks    = allBytes.length / 16;
-    var nCtBlocks  = nBlocks - 1;
+    var allBytes = hexToBytes(hex);
+    var nBlocks = allBytes.length / 16;
+    var nCtBlocks = nBlocks - 1;
     var totalBytes = nCtBlocks * 16;
 
     var blocks = [];
@@ -152,9 +151,9 @@ async function lancerAttaque() {
 
     outer: for (var bi = 1; bi <= nCtBlocks; bi++) {
         if (!running) break;
-        var ctBlock  = blocks[bi];
+        var ctBlock = blocks[bi];
         var prevOrig = blocks[bi - 1];
-        var interm   = new Uint8Array(16);
+        var interm = new Uint8Array(16);
 
         for (var bytePos = 15; bytePos >= 0; bytePos--) {
             if (!running) break outer;
@@ -188,22 +187,21 @@ async function lancerAttaque() {
         }
     }
 
-    // supprimer le padding PKCS#7
     var raw = [];
     for (var i = 0; i < totalBytes; i++)
         raw.push(recMap.has(i) ? recMap.get(i) : 0x3f);
 
     var trimmed = raw.slice();
     var padVal = trimmed[trimmed.length - 1];
-    if (padVal >= 1 && padVal <= 16 && trimmed.slice(-padVal).every(function(v) { return v === padVal; }))
+    if (padVal >= 1 && padVal <= 16 && trimmed.slice(-padVal).every(function (v) { return v === padVal; }))
         trimmed = trimmed.slice(0, -padVal);
 
     var recovered = new TextDecoder().decode(new Uint8Array(trimmed));
 
-    document.getElementById('recMsg').textContent  = recovered;
-    document.getElementById('rTotal').textContent  = totalReq;
-    document.getElementById('r403').textContent    = total403;
-    document.getElementById('r200').textContent    = total200;
+    document.getElementById('recMsg').textContent = recovered;
+    document.getElementById('rTotal').textContent = totalReq;
+    document.getElementById('r403').textContent = total403;
+    document.getElementById('r200').textContent = total200;
     document.getElementById('zoneResult').style.display = 'block';
 
     document.getElementById('btnLancer').disabled = false;
