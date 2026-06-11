@@ -1,14 +1,73 @@
-body { background: #111; color: #ddd; font-family: monospace; padding: 20px; }
-a { color: #aaa; }
-input { background: #222; color: #ddd; border: 1px solid #555; padding: 4px; font-family: monospace; width: 400px; }
-button { background: #222; color: #ddd; border: 1px solid #555; padding: 4px 10px; cursor: pointer; font-family: monospace; }
-table { border-collapse: collapse; font-size: 12px; }
-td, th { border: 1px solid #444; padding: 3px 6px; text-align: left; }
-th { background: #1a1a1a; }
-pre { background: #222; padding: 8px; word-break: break-all; white-space: pre-wrap; }
-hr { border-color: #333; }
-.ok   { color: #2d9; }
-.fail { color: #f66; }
-.dim  { color: #666; }
-.iv   { color: #ffcc22; }
-.ct   { color: #4488ff; }
+/* style pour la page serveur - fait un peu vite */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    margin: 20px;
+    color: black;
+}
+
+h2 {
+    color: #003366;
+    border-bottom: 2px solid #003366;
+    padding-bottom: 5px;
+}
+
+h3 {
+    color: #333;
+}
+
+h4 { margin-bottom: 3px; }
+
+input[type="text"] {
+    border: 1px solid gray;
+    padding: 3px;
+    width: 300px;
+}
+
+button {
+    background-color: #003366;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+/* pas le temps de faire beau */
+table {
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+td, th {
+    border: 1px solid #aaa;
+    padding: 4px 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #ddeeff;
+}
+
+pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 8px;
+    word-break: break-all;
+    white-space: pre-wrap;
+    font-size: 12px;
+}
+
+.ok   { color: green; }
+.fail { color: red; }
+.dim  { color: #888; }
+.iv   { color: darkorange; font-weight: bold; }
+.ct   { color: navy; }
+
+hr { border: none; border-top: 1px solid #ccc; margin: 15px 0; }
+
+p { margin: 8px 0; }
+
+a { color: #003366; }

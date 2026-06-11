@@ -1,14 +1,5 @@
 var API = 'http://localhost:5001';
 
-// Lecture du ciphertext depuis l'URL (?ct=...)
-var params = new URLSearchParams(window.location.search);
-var ctFromUrl = params.get('ct') || '';
-
-if (ctFromUrl) {
-    document.getElementById('ctInput').value    = ctFromUrl;
-    document.getElementById('ctDisplay').textContent = ctFromUrl;
-    document.getElementById('bannerCt').style.display = 'block';
-}
 
 function hexToBytes(hex) {
     var b = new Uint8Array(hex.length >> 1);
