@@ -123,7 +123,6 @@ async function lancerAttaque() {
 
     document.getElementById('btnLancer').disabled = true;
     document.getElementById('btnStop').style.display = 'inline';
-    document.getElementById('zoneResult').style.display = 'none';
     document.getElementById('zoneAttaque').style.display = 'block';
     document.getElementById('tbody403').innerHTML = '';
     document.getElementById('tbody200').innerHTML = '';
@@ -190,11 +189,6 @@ async function lancerAttaque() {
 
     var recovered = new TextDecoder().decode(new Uint8Array(trimmed));
 
-    document.getElementById('recMsg').textContent = recovered;
-    document.getElementById('rTotal').textContent = totalReq;
-    document.getElementById('r403').textContent = total403;
-    document.getElementById('r200').textContent = total200;
-    document.getElementById('zoneResult').style.display = 'block';
 
     document.getElementById('btnLancer').disabled = false;
     document.getElementById('btnStop').style.display = 'none';
