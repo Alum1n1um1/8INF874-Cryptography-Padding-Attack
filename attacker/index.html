@@ -18,7 +18,6 @@
 
 <div id="ctSection">
   <h4>Ciphertext cible (hex, IV inclus)</h4>
-  <p>Coller ici le ciphertext copie depuis la page serveur :</p>
   <textarea id="ctInput" rows="3" placeholder="Coller le ciphertext hex ici..."
     style="width:100%; font-family:monospace; font-size:12px; padding:5px; box-sizing:border-box;"></textarea>
 </div>
@@ -68,17 +67,6 @@
     </tr>
   </table>
 
-</div>
-
-<div id="zoneResult" style="display:none;">
-  <hr>
-  <h3>Resultat</h3>
-  <table style="width:auto;">
-    <tr><td>Clair recupere par l'attaquant</td><td id="recMsg" class="ok"></td></tr>
-    <tr><td>Total requetes oracle</td><td id="rTotal">-</td></tr>
-    <tr><td>Dont 403</td><td id="r403" class="fail">-</td></tr>
-    <tr><td>Dont 200</td><td id="r200" class="ok">-</td></tr>
-  </table>
 </div>
 
 <script src="attaque.js"></script>

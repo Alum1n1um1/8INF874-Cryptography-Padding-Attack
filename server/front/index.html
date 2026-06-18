@@ -19,14 +19,8 @@
 <h3>Le serveur chiffre les donnees en AES-128-CBC</h3>
 
 <p>
-  Chaque message est chiffre avec une cle aleatoire generee au demarrage du serveur.<br>
-  Le serveur renvoie <code>IV || C1 || C2 ...</code> en hex.<br>
-  Il expose aussi un endpoint <code>/paddingOracle</code> qui indique si le padding est valide.
-</p>
-
-<p>
   Message a chiffrer :
-  <input type="text" id="msgInput" value="Hello, World!">
+  <input type="text" id="msgInput">
   <button onclick="chiffrer()">Chiffrer</button>
 </p>
 
