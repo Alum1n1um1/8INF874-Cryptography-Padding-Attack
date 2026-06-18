@@ -99,14 +99,7 @@ async function oracle(modPrev, ctBlock, bi, bytePos, b, targetPad) {
     return ok;
 }
 
-function updateStats(bi, nBlocs, bytePos, totalBytes, b, targetPad) {
-    document.getElementById('sBloc').textContent = bi + ' / ' + nBlocs;
-    document.getElementById('sOctet').textContent = (16 - bytePos) + ' / 16';
-    document.getElementById('sB').textContent = h(b);
-    document.getElementById('sPad').textContent = h(targetPad);
-    var done = (bi - 1) * 16 + (16 - bytePos);
-    document.getElementById('sPct').textContent = Math.round(done / totalBytes * 100) + '%';
-}
+
 
 function updateDisplay(totalBytes) {
     var s = '';
@@ -161,7 +154,6 @@ async function lancerAttaque() {
 
             for (var b = 0; b <= 255; b++) {
                 if (!running) break;
-                updateStats(bi, nCtBlocks, bytePos, totalBytes, b, targetPad);
 
                 var modPrev = new Uint8Array(prevOrig);
                 modPrev[bytePos] = b;

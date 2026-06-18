@@ -16,18 +16,6 @@
 
 <hr>
 
-<h3>Machine attaquante -- Attaque Padding Oracle</h3>
-
-<p>
-  L'attaquant a intercepte un ciphertext AES-CBC. Il ne connait pas la cle.<br>
-  Il interroge l'oracle de padding du serveur (HTTP 200 / 403) pour retrouver le clair.<br>
-  Formules :<br>
-  &nbsp;&nbsp;<code>interm[j] = b XOR targetPad</code> &nbsp;(quand oracle repond 200)<br>
-  &nbsp;&nbsp;<code>P[j] = interm[j] XOR C[i-1][j]</code> &nbsp;(clair retrouve)
-</p>
-
-<hr>
-
 <div id="ctSection">
   <h4>Ciphertext cible (hex, IV inclus)</h4>
   <p>Coller ici le ciphertext copie depuis la page serveur :</p>
@@ -42,17 +30,7 @@
 
 <div id="zoneAttaque" style="display:none;">
 
-  <h4>Progression</h4>
-  <table style="width:auto;">
-    <tr><td>Bloc</td><td id="sBloc">-</td></tr>
-    <tr><td>Octet</td><td id="sOctet">-</td></tr>
-    <tr><td>b teste</td><td id="sB">-</td></tr>
-    <tr><td>targetPad</td><td id="sPad">-</td></tr>
-    <tr><td>Requetes 403</td><td id="s403" class="fail">0</td></tr>
-    <tr><td>Requetes 200</td><td id="s200" class="ok">0</td></tr>
-    <tr><td>Total</td><td id="sTotal">0</td></tr>
-    <tr><td>Progression</td><td id="sPct">0%</td></tr>
-  </table>
+  <p>Requetes 403 : <span id="s403" class="fail">0</span> &nbsp;|&nbsp; Requetes 200 : <span id="s200" class="ok">0</span> &nbsp;|&nbsp; Total : <span id="sTotal">0</span></p>
 
   <h4>Clair recupere :</h4>
   <pre id="recDisplay"></pre>
@@ -100,7 +78,6 @@
     <tr><td>Total requetes oracle</td><td id="rTotal">-</td></tr>
     <tr><td>Dont 403</td><td id="r403" class="fail">-</td></tr>
     <tr><td>Dont 200</td><td id="r200" class="ok">-</td></tr>
-    <tr><td>Cle AES connue</td><td class="fail">NON</td></tr>
   </table>
 </div>
 
